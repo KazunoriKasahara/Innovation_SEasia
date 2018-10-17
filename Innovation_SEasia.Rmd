@@ -1,0 +1,100 @@
+---
+title: "Innovation_SEasia"
+author: "Kazunori_Kasahara"
+date: "2018/10/17"
+output: html_document
+---
+
+Integrate data to one panel
+```{r}
+library(tidyverse)
+FDI <- read.csv('FDI.csv')
+patent <- read.csv('patent.csv',skip = 7)
+royalty <- read.csv('royalty.csv')
+import <- readRDS('import_panel')
+export <- readRDS('export_panel')
+
+colnames(FDI) <- c('country','year','FDI')
+patent <- patent %>% select(1,2,3)
+colnames(patent) <- c('country','year','patent')
+patent$country[which(patent$country=='IND')] <- 'IDN'
+colnames(royalty) <- c('country','year','royalty')
+
+panel <- 
+  left_join(import,export, by = c ('year','country')) %>%
+  left_join(FDI,by = c ('year','country')) %>%
+  left_join(patent,by = c ('year','country')) %>%
+  left_join(royalty,by = c ('year','country'))
+
+library(plm)
+panel <- pdata.frame(panel,c('country','year'))
+panel$year <- as.integer(panel$year)
+panel$import <- as.numeric(as.character(panel$import))
+panel$export <- as.numeric(as.character(panel$export))
+panel <- panel %>% filter(year >= 23) # >= 1982
+
+panel$ln_import <-  log(panel$import)
+panel$ln_export <- log(panel$export)
+panel$ln_FDI <- log(panel$FDI)
+panel$ln_royalty <- log(panel$royalty)
+panel$ln_patent <- log(panel$patent)
+  
+#saveRDS(panel,'panel')
+
+
+```
+
+Visualize data
+```{r}
+
+p1 <- plot(panel$import,panel$patent)
+p2 <- plot(panel$export,panel$patent)
+p3 <- plot(panel$FDI,panel$patent)
+p4 <- plot(panel$royalty,panel$patent)
+
+```
+Analyze data
+```{r}
+equation1 <- ln_patent ~ ln_import + ln_export + ln_FDI + ln_royalty 
+model_fixed <- plm(equation1,data = panel,model = "within")
+summary(model_fixed)
+
+```
+多重共線性。。。
+```{r}
+plot(panel[8:11])
+```
+```{r}
+equation2 <- ln_patent ~ ln_export + ln_FDI + ln_royalty 
+model_fixed2 <- plm(equation2,data = panel,model = "within")
+summary(model_fixed2)
+```
+
+```{r}
+equation3 <- ln_patent ~ ln_import + ln_FDI + ln_royalty
+model_fixed3 <- plm(equation3,data = panel,model = "within")
+summary(model_fixed3)
+```
+```{r}
+equation4 <- ln_patent ~ ln_import + ln_royalty
+model_fixed4 <- plm(equation4,data = panel,model = "within")
+summary(model_fixed4)
+```
+
+```{r}
+equation5 <- ln_patent ~ ln_export + ln_royalty
+model_fixed5 <- plm(equation5,data = panel,model = "within")
+summary(model_fixed5)
+```
+
+```{r}
+equation6 <- ln_patent ~ ln_FDI + ln_royalty
+model_fixed6 <- plm(equation6,data = panel,model = "within")
+summary(model_fixed6)
+```
+```{r}
+equation7 <- patent ~ import + export + FDI + royalty
+model_fixed7 <- plm(equation7,data = panel,model = "within")
+summary(model_fixed7)
+```
+
