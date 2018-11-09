@@ -28,8 +28,8 @@ panel_RD$business_RD <- as.numeric(as.character(panel_RD$business_RD))
 panel_RD$public_RD <- panel_RD$total_RD - panel_RD$business_RD
 names(panel_RD)[2] <- 'year'
 
-education <- read_csv('year of education.csv')
-education <- education[2:121,]
+education <- readxl::read_xlsx('year_education.xlsx')
+education <- education[1:120,]
 education <- education %>% select(-7,-8)
 education <- education %>% select(2,3,6)
 names(education) <- c ('country','year','edu_year') 
@@ -74,11 +74,6 @@ summary(model_fixed)
 
 ```
 
-```{r}
-equation2 <- l_patent ~ attitude_globalization + l_bus + IPR + GDPpercapita + edu_year
-model_fixed_2 <- plm(equation2,data = panel_2_panel,model = "within")
-summary(model_fixed_2)
-```
 
 
 
