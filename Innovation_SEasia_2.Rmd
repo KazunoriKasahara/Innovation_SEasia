@@ -61,6 +61,10 @@ panel_2$l_bus <- log(panel_2$business_RD)
 panel_2$l_pub <- log(panel_2$public_RD)
 panel_2$l_patent <- log(panel_2$patent)
 
+panel_2$capacity <- panel_2$patent / (panel_2$business_RD + panel_2$public_RD)
+panel_2$l_capacity <- log(panel2$capacity)
+
+
 ```
 
 ```{r}
@@ -74,7 +78,31 @@ summary(model_fixed)
 
 ```
 
+```{r}
+library(plm)
+panel_2_panel <- pdata.frame(panel_2,c('country','year'))
+panel_2_panel$attitude_globalization <- as.numeric(as.character(panel_2_panel$attitude_globalization))
 
+equation2 <- capacity ~ attitude_globalization + l_bus + l_pub + IPR + GDPpercapita + edu_year
+model_fixed_2 <- plm(equation2,data = panel_2_panel,model = "within")
+summary(model_fixed_2)
+```
+
+```{r}
+library(plm)
+panel_2_panel <- pdata.frame(panel_2,c('country','year'))
+panel_2_panel$attitude_globalization <- as.numeric(as.character(panel_2_panel$attitude_globalization))
+
+equation3 <- l_capacity ~ attitude_globalization + l_bus + l_pub + IPR + GDPpercapita + edu_year
+model_fixed_3 <- plm(equation3,data = panel_2_panel,model = "within")
+summary(model_fixed_3)
+```
+
+
+
+```{r}
+ggplot(panel_2) + geom_line(aes(year,log(capacity),col = country)) 
+```
 
 
 ```{r}
